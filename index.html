@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cooked 🔥</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="bg-blur"></div>
+
+    <div class="container">
+
+        <h1 class="title">🔥 Cooked</h1>
+        <p class="subtitle">Paste a Spotify playlist link and I’ll roast it.</p>
+
+        <div class="input-section">
+            <input id="playlist-input" placeholder="Paste your playlist URL..." />
+            <button id="roast-btn">Roast 🎧🔥</button>
+        </div>
+
+        <div id="playlist-info" class="playlist-info hidden">
+            <div class="cover-wrapper">
+                <div class="vinyl"></div>
+                <img id="playlist-cover" class="playlist-cover">
+            </div>
+
+            <h2 id="playlist-title" class="playlist-title"></h2>
+
+            <!-- ⭐ Vibe Score Box -->
+            <div id="vibe-box">
+    <h2>Vibe Score:</h2>
+    <div id="vibe-score" class="big-score"></div>
+    <p id="vibe-explanation"></p>
+</div>
+
+        </div>
+
+        <div id="roast-box" class="roast-box hidden">
+            <h3 class="roast-heading">🔥 Roast:</h3>
+            <p id="roast-output"></p>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

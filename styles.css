@@ -1,0 +1,213 @@
+/* ------------------ GLOBAL ------------------ */
+body {
+    font-family: "Inter", Arial, Helvetica, sans-serif;
+    background: #000;
+    color: white;
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+:root {
+    --spotify-green: #1db954;
+    --glass-light: rgba(255, 255, 255, 0.07);
+    --glass-border: rgba(255, 255, 255, 0.15);
+}
+
+/* ------------------ BACKGROUND BLUR ------------------ */
+#bg-blur {
+    position: fixed;
+    inset: 0;
+
+    background-size: cover;
+    background-position: center;
+    filter: blur(30px) brightness(0.35);
+    transform: scale(1.15);
+    z-index: -1;
+    transition: 0.6s ease-out;
+}
+
+/* ------------------ CONTAINER ------------------ */
+.container {
+    width: 95%;
+    max-width: 480px;
+    padding: 40px 32px;
+    border-radius: 24px;
+
+    background: var(--glass-light);
+    backdrop-filter: blur(18px);
+    border: 1px solid var(--glass-border);
+
+    text-align: center;
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ------------------ TITLES ------------------ */
+.title {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    opacity: 0.75;
+    margin-bottom: 28px;
+}
+
+/* ------------------ INPUT SECTION ------------------ */
+.input-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+input {
+    flex: 1;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    border: none;
+}
+
+input:focus {
+    outline: none;
+    box-shadow: 0 0 12px var(--spotify-green);
+}
+
+/* ------------------ BUTTON ------------------ */
+button {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 12px;
+    background: var(--spotify-green);
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 0 12px var(--spotify-green);
+}
+
+/* ------------------ PLAYLIST INFO ------------------ */
+.cover-wrapper {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 0 auto; /* centers wrapper */
+}
+
+.vinyl {
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #111 40%, #000 80%);
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: spin 7s linear infinite;
+    opacity: 0.45;
+}
+
+@keyframes spin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+#playlist-cover {
+    width: 220px;
+    height: 220px;
+    border-radius: 18px;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+
+    box-shadow: 0 5px 25px rgba(29,185,84,0.5);
+}
+
+.playlist-title {
+    margin-top: 22px;
+    margin-bottom: 25px;
+    font-size: 22px;
+    color: var(--spotify-green);
+}
+
+/* ------------------ ROAST BOX ------------------ */
+#roast-box {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 22px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 35px rgba(0, 0, 0, 0.4);
+
+    margin-top: 32px;
+}
+
+#roast-output {
+    line-height: 1.6;
+    font-size: 17px;
+    opacity: 0.95;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.show {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* --- Typewriter Effect --- */
+.typewriter {
+    border-right: 3px solid var(--spotify-green);
+    white-space: pre-wrap;
+    overflow: hidden;
+    animation: cursorBlink 0.7s infinite;
+}
+
+@keyframes cursorBlink {
+    50% { border-color: transparent; }
+}
+
+/* --- Vibe Score Box --- */
+#vibe-box {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+    color: white;
+}
+
+.big-score {
+    font-size: 60px;
+    font-weight: 700;
+    color: #1db954;
+    text-shadow: 0 0 20px #1db954aa;
+}
+
+
+#vibe-output {
+    color: var(--spotify-green);
+    font-size: 18px;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(29, 185, 84, .9);
+}
+
