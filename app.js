@@ -85,8 +85,18 @@ document.getElementById("vibe-explanation").innerText = vibeData.explanation;
         roastBox.classList.remove("hidden");
         typeWriter(roastOutput, roastData.roast, 16);
 
+       
+        const wrappedStats = await fetch('http://localhost:3000/wrapped',{
+           method : "POST",
+           headers : {"Content-Type" : "application/json"},
+           body : JSON.stringify({playlistId})
+
+        })
+
+
     } catch (err) {
         roastOutput.textContent = "❌ Could not load playlist tracks";
         console.error(err);
     }
 });
+

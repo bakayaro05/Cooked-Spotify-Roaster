@@ -1,0 +1,5 @@
+###fetching playlist information.
+GET http://localhost:3000/playlist?id=43UyYNnF4toJQLGgdV2fqg?si=brL7hpPbQ4-XKWi1w38K6A&pi=RZr_lAklSJm9S
+
+### GETTING WRAPPED data
+POST http://localhost:3000/wrapped

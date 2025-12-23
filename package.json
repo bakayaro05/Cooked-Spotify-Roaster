@@ -9,6 +9,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "dev":"node --env-file=C:\\Users\\Administrator\\Desktop\\cooked\\.env server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },

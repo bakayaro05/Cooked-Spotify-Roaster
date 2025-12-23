@@ -4,6 +4,7 @@ import Groq from "groq-sdk";
 import fetch from "node-fetch";
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getHiddenGem, getPlaylistStats, getPlaylistVibe, getTopArtist, getTopGenre } from "./analytics.js";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -158,6 +159,84 @@ ${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
         res.status(500).json({ error: err.message });
     }
 });
+
+app.post("/wrapped", async (req, res) => {
+  try {
+    const {playlistId} = req.body;
+    const token = await getSpotifyToken();
+
+     const response = await fetch(
+      `https://api.spotify.com/v1/playlists/${playlistId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+     const data = await response.json();
+     
+       const tracks = data.tracks.items
+      .map(i => i.track)
+      .filter(Boolean);
+
+    const artistGenreMap = await getArtistsGenre(tracks, token);
+    const wrapped = buildWrappedStats(tracks, artistGenreMap);
+
+    res.json(wrapped);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+function buildWrappedStats(tracks, artistGenres) {
+
+  const basicData = getPlaylistStats(tracks);
+  const topGenre = getTopGenre(tracks, artistGenres);
+  
+
+  return {
+    popularity: basicData.avgPopularity,
+    trackCount: basicData.trackCount,
+    totalMinutes: basicData.totalMinutes,
+    topArtist: getTopArtist(tracks),
+    topGenre: topGenre,
+    vibe: getPlaylistVibe(tracks, topGenre),
+    hiddenGem: getHiddenGem(tracks)
+  };
+}
+
+
+
+ async function getArtistsGenre(tracks, token) {
+  // Collect unique artist IDs
+  const artistMap = {};
+
+  tracks.forEach(track => {
+    track.artists.forEach(artist => {
+      artistMap[artist.id] = artist.href;
+    });
+  });
+
+  const artistHrefs = Object.values(artistMap);
+
+  const artistRes = await Promise.all(
+    artistHrefs.map(href =>
+      fetch(href, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+    )
+  );
+
+  const artists = await Promise.all(artistRes.map(r => r.json()));
+
+  const artistGenreMap = {};
+  artists.forEach(artist => {
+    artistGenreMap[artist.id] = artist.genres || [];
+  });
+
+  return artistGenreMap;
+}
 
 
 // Run server
