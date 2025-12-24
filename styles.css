@@ -173,6 +173,11 @@ button:hover {
     animation: fadeIn 0.5s ease-out;
 }
 
+.continue-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
 /* --- Typewriter Effect --- */
 .typewriter {
     border-right: 3px solid var(--spotify-green);
@@ -281,6 +286,22 @@ button:hover {
     transform: scale(1);
   }
 }
+
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+
+#wrapped-root {
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+#wrapped-root.fade-out {
+  opacity: 0;
+}
+
 
 /* Backgrounds */
 .bg-purple {

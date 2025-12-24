@@ -1,4 +1,4 @@
-import { startWrapped } from "./wrapped.js";
+import { resetToHome, startWrapped } from "./wrapped.js";
 
 const roastBtn = document.getElementById("roast-btn");
 const playlistInput = document.getElementById("playlist-input");
@@ -105,6 +105,19 @@ document.getElementById("vibe-explanation").innerText = vibeData.explanation;
    //When the user clicks continue we startWrapped.
     document.getElementById("continue-btn").addEventListener("click", () => {
   startWrapped(wrappedStats);});
+
+//listner to listen when the wrapped has finished.
+  window.addEventListener("wrapped:done", () => {
+  const wrapped = document.getElementById("wrapped-root");
+
+  wrapped.classList.add("fade-out");
+
+  setTimeout(() => {
+    resetToHome();
+    wrapped.classList.remove("fade-out");//returns to homescreen once done.
+  }, 600);
+});
+
 
 
     } catch (err) {

@@ -100,7 +100,7 @@ app.post("/roast", async (req, res) => {
         const tracks = req.body.tracks;
 
         const prompt = `
-Roast this Spotify playlist of a user sarcastically. Keep it short
+Roast this Spotify playlist of a user sarcastically. Keep it very very short
 Songs:
 ${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
         `;
@@ -171,7 +171,7 @@ app.post("/wrapped", async (req, res) => {
     );
 
      const data = await response.json();
-     
+
        const tracks = data.tracks.items
       .map(i => i.track)
       .filter(Boolean);

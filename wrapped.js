@@ -80,8 +80,42 @@ function playSlides(slides) {
     index++;
     if (index >= slides.length) {
       clearInterval(interval);
+
+     // ✅ SIGNAL THAT WRAPPED IS DONE
+      window.dispatchEvent(new Event("wrapped:done"));
       return;
     }
     renderSlide(slides[index]);
   }, 4000);
+
+  
+
+}
+
+
+export function resetToHome() {
+  // Hide wrapped
+  document.getElementById("wrapped-root").classList.add("hidden");
+
+  // Reset roast UI
+  document.getElementById("roast-box").classList.add("hidden");
+  document.getElementById("continue-btn").style.display = "none";
+  document.getElementById("continue-btn").classList.remove("show");
+
+  // Clear text
+  document.getElementById("roast-output").textContent = "";
+  document.getElementById("vibe-score").textContent = "";
+  document.getElementById("vibe-explanation").textContent = "";
+
+  // Reset playlist section
+  document.getElementById("playlist-info").classList.add("hidden");
+
+  // Reset input
+  document.getElementById("playlist-input").value = "";
+
+  // Optional: reset background
+  document.getElementById("bg-blur").style.backgroundImage = "";
+
+  // Scroll to top (important for mobile)
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
