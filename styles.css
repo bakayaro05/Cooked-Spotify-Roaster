@@ -211,3 +211,86 @@ button:hover {
     text-shadow: 0 0 15px rgba(29, 185, 84, .9);
 }
 
+/* --- WRAPPED --- */
+
+.wrapped {
+  position: fixed;
+  inset: 0;
+  background: black;
+  z-index: 999;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Wrapped fullscreen */
+.wrapped {
+  position: fixed;
+  inset: 0;
+  background: black;
+  z-index: 999;
+  overflow: hidden;
+}
+
+/* Slide base */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+}
+
+/* When activated */
+.slide.active {
+  opacity: 1;
+}
+
+/* Text styles */
+.small {
+  font-size: 1.2rem;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.big {
+  font-size: 3.5rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: scale(0.9);
+  animation: scaleIn 0.8s ease forwards;
+  animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Backgrounds */
+.bg-purple {
+  background: radial-gradient(circle at top, #7f5cff, #0f0f1a);
+}
+
+.bg-orange {
+  background: radial-gradient(circle at top, #ff8a00, #1a0f00);
+}
+
+.bg-dark {
+  background: radial-gradient(circle at top, #222, #000);
+}

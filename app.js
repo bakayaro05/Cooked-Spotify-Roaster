@@ -1,9 +1,11 @@
+import { startWrapped } from "./wrapped.js";
+
 const roastBtn = document.getElementById("roast-btn");
 const playlistInput = document.getElementById("playlist-input");
 const roastOutput = document.getElementById("roast-output");
 const vibeOutput = document.getElementById("vibe-output");
 
-function typeWriter(element, text, speed = 18) {
+function typeWriter(element, text, speed = 18,onComplete) {
     element.innerHTML = "";
     element.classList.add("typewriter");
     let i = 0;
@@ -15,6 +17,7 @@ function typeWriter(element, text, speed = 18) {
         if (i > text.length) {
             clearInterval(interval);
             element.classList.remove("typewriter");
+            if (onComplete) onComplete();
         }
     }, speed);
 }
@@ -83,20 +86,31 @@ document.getElementById("vibe-explanation").innerText = vibeData.explanation;
         // ⭐ Typewriter Roast
         const roastBox = document.getElementById("roast-box");
         roastBox.classList.remove("hidden");
-        typeWriter(roastOutput, roastData.roast, 16);
+
+        //Typewriter for continue wrapped section.
+       typeWriter(roastOutput, roastData.roast, 18, () => {
+  document.getElementById("continue-btn").style.display = "block";
+});
+        
 
        
-        const wrappedStats = await fetch('http://localhost:3000/wrapped',{
+        const wrappedRes = await fetch('http://localhost:3000/wrapped',{
            method : "POST",
            headers : {"Content-Type" : "application/json"},
            body : JSON.stringify({playlistId})
 
         })
+        const wrappedStats = await wrappedRes.json();
+
+   //When the user clicks continue we startWrapped.
+    document.getElementById("continue-btn").addEventListener("click", () => {
+  startWrapped(wrappedStats);});
 
 
     } catch (err) {
-        roastOutput.textContent = "❌ Could not load playlist tracks";
+        roastOutput.textContent = "❌ Could not load playlist tra   cks";
         console.error(err);
     }
+
 });
 
