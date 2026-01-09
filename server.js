@@ -170,7 +170,12 @@ app.post("/wrapped", async (req, res) => {
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
+    
      const data = await response.json();
+
+     if (!data?.tracks?.items) {
+  return res.status(400).json({ error: "Invalid or empty playlist" });
+}
 
        const tracks = data.tracks.items
       .map(i => i.track)
