@@ -1,113 +1,207 @@
 import StatSlide from "./component/slide/StatSlide";
-import { useState,useEffect } from "react";
-import { useRef } from "react";
-import Background from "./component/background/background" 
+import NarrativeSlide from "./component/slide/NarrativeSlide";
+import { useState, useEffect, useRef, useMemo } from "react";
+import Background from "./component/background/background";
+import "./App.css"
+import gsap from 'gsap'
+
+import bg0 from "./assets/bg0.mp4";
 import bg1 from "./assets/bg1.mp4";
 import bg2 from "./assets/bg2.mp4";
 import bg3 from "./assets/bg3.mp4";
 import bg4 from "./assets/bg4.mp4";
 import bg5 from "./assets/bg5.mp4";
 
+const backgrounds = [bg1, bg2, bg3, bg4, bg5];
 
-const backgrounds = [bg1, bg2,bg3,bg4,bg5];
-
-
-
+function getPlaylistId(url) {
+  const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
+  return match ? match[1] : null;
+}
 
 function App() {
-  
+  const slideRef = useRef(null);
+  const loadingRef = useRef(null);
+  const slidesContainerRef = useRef(null);
 
- const slideRef = useRef();
- 
- const [data,setData]=useState(null);
- const [index,setIndex]=useState(0);
+  const [data, setData] = useState(null);
+  const [index, setIndex] = useState(0);
+  const [playlistUrl, setPlaylistUrl] = useState("");
+  const [phase, setPhase] = useState("input");
 
+  /* ---------------- SLIDES (DERIVED SAFELY) ---------------- */
 
-//calling /wrapped endpoint.
- useEffect(() => {
-  fetch("http://localhost:3000/wrapped", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      playlistId: "5GFpByk3bLI0Ah392uW3Gj?si=kFVRzHxtQ4uAkktRzw-ODw&pi=a-12VYjnLuSByb", // test playlist
-    }),
-  })
-    .then(res => res.json())
-    .then(json => setData(json))
-    .catch(err => console.error(err));
-}, []);
+  const slides = useMemo(() => {
+    if (!data) return [];
 
+    const roastSlides = (data.roasts || []).map(sentence => ({
+      type: "narrative",
+      sentence,
+    }));
 
- // AUTO ADVANCE
+    return [
+      {
+        type: "stat",
+        title: "Average Popularity",
+        value: `${data.popularity}%`,
+        subtitle: "How mainstream your taste is",
+        direction: "up",
+      },
+      {
+        type: "stat",
+        title: "Total Tracks",
+        value: data.trackCount,
+        subtitle: "Songs in this playlist",
+        direction: "scale",
+      },
+      {
+        type: "narrative",
+        sentence: `You spent ${data.totalMinutes} minutes vibing.`,
+      },
+      ...roastSlides,
+      {
+        type: "stat",
+        title: "Top Artist",
+        value: data.topArtist,
+        subtitle: "Your most played artist",
+        direction: "left",
+      },
+      {
+        type: "stat",
+        title: "Top Genre",
+        value: data.topGenre,
+        subtitle: "Your dominant genre",
+        direction: "right",
+      },
+    ];
+  }, [data]);
+
+  /* ---------------- AUTO ADVANCE ---------------- */
+
   useEffect(() => {
-  if (!slideRef.current || !data) return;
+    //  HARD GUARD — prevents  crash
+    if (
+      phase !== "slides" ||
+      !slideRef.current ||
+      slides.length === 0
+    ) {
+      return;
+    }
 
+    const timer = setTimeout(() => {
+      slideRef.current.exit(() => {
+        setIndex(i => (i < slides.length - 1 ? i + 1 : i));
+      });
+    }, 7500);
 
+    return () => clearTimeout(timer);
+  }, [index, slides.length, phase]);
 
-  const timer = setTimeout(() => {
-    slideRef.current.exit(() => {
-      setIndex(i => (i < slides.length - 1 ? i + 1 : i));
+/* ---------------- FOR SMOOTH TRANSITION BETWEEN LOADING AND SLIDES SCREEN ---------------- */
+  useEffect(() => {
+  if (phase !== "slides") return;
+
+  const tl = gsap.timeline();
+
+  // hide slides initially
+  gsap.set(slidesContainerRef.current, {
+    opacity: 0,
+    scale: 0.98
+  });
+
+  tl.to(loadingRef.current, {
+    opacity: 0,
+    scale: 1.05,
+    duration: 0.8,
+    ease: "power2.inOut"
+  })
+    .set(loadingRef.current, { display: "none" })
+    .to(slidesContainerRef.current, {
+      opacity: 1,
+      scale: 1,
+      duration: 1,
+      ease: "power2.out"
     });
-  }, 7500);
 
-  return () => clearTimeout(timer);
-}, [index, data]);
+}, [phase]);
 
 
 
-// Guard goes AFTER hooks
-  if (!data) {
-    return <div>Loading your Wrapped...</div>;
+  /* ---------------- START WRAPPED ---------------- */
+
+  const startWrapped = async () => {
+    if (!playlistUrl) return;
+
+    setPhase("loading");
+
+    try {
+      const id = getPlaylistId(playlistUrl);
+      const res = await fetch("http://localhost:3000/wrapped", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playlistId: id }),
+      });
+
+      const json = await res.json();
+      setData(json);
+
+      setTimeout(() => setPhase("slides"), 1500);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* ---------------- PHASE SCREENS ---------------- */
+
+  if (phase === "input") {
+    return (
+      <div className="input-screen">
+        <h1>Your Spotify Wrapped</h1>
+        <input
+          placeholder="Paste playlist link"
+          value={playlistUrl}
+          onChange={e => setPlaylistUrl(e.target.value)}
+        />
+        <button onClick={startWrapped}>Continue</button>
+      </div>
+    );
   }
- 
 
-//The slides data.
-  const slides = [
-  {
-    title: "Average Popularity",
-    value: `${data.popularity}%`,
-    subtitle: "How mainstream your taste is",
-  },
-  {
-    title: "Total Tracks",
-    value: data.trackCount,
-    subtitle: "Songs in this playlist",
-  },
-  {
-    title: "Listening Time",
-    value: `${data.totalMinutes} mins`,
-    subtitle: "Time spent vibing",
-  },
-  {
-    title: "Top Artist",
-    value: data.topArtist,
-    subtitle: "Your most played artist",
-  },
-  {
-    title: "Top Genre",
-    value: data.topGenre,
-    subtitle: "Your dominant genre",
-  },
-];
+  if (phase === "loading") {
+    return (
+      <div className="loading-screen" ref={loadingRef}>
+        <video autoPlay muted loop playsInline>
+          <source src={bg0} />
+        </video>
+        <div className="loading-text">
+          Wrapping your music taste into space…
+        </div>
+      </div>
+    );
+  }
 
+  if (!data) return null;
 
-//rendering one slide based on index.
-const slide = slides[index];
- return (
- <>
-  <Background src={backgrounds[index]} />
+  /* ---------------- RENDER SLIDE ---------------- */
 
- <StatSlide
-    ref={slideRef}
-    key={index}
-    title={slide.title}
-    value={slide.value}
-    subtitle={slide.subtitle}
-  />
- </>
- );
+  const slide = slides[index];
+return(
+  <>
+   <Background src={backgrounds[index % backgrounds.length]} />
+   
+  <div ref={slidesContainerRef} className="slides-container">
+    {slide.type === "stat" ? (
+      <StatSlide ref={slideRef} key={index} {...slide} />
+    ) : (
+      <NarrativeSlide
+        ref={slideRef}
+        key={index}
+        sentence={slide.sentence}
+      />
+    )}
+  </div>
+  </>
+);
 }
 
 export default App;

@@ -1,8 +1,9 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { gsap } from "gsap";
+import SplitType from "split-type";
 import "./slide.css";
 
-const StatSlide = forwardRef(({ title, value, subtitle }, ref) => {
+const StatSlide = forwardRef(({ title, value, subtitle,direction }, ref) => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const valueRef = useRef(null);
@@ -13,7 +14,9 @@ const StatSlide = forwardRef(({ title, value, subtitle }, ref) => {
   console.log("StatSlide rendered", { title, value, subtitle });
   // ENTER animation (Spotify-style)
   useEffect(() => {
-   const tl = gsap.timeline();  
+
+  const valueSplit = new SplitType(valueRef.current, { types: "chars" });
+  const tl = gsap.timeline();  
   const ctx = gsap.context(()=>{
 
  
@@ -24,15 +27,15 @@ const StatSlide = forwardRef(({ title, value, subtitle }, ref) => {
     ease: "power3.out",
   })
   .from(
-    valueRef.current,
-    {
-      y: 60,
-      opacity: 0,
-      duration: 2.0,
-      ease: "power3.out",
-    },
-    "-=0.3"
-  );
+      valueSplit.chars,
+      {
+        y: 50,
+        opacity: 0,
+        stagger: 0.25,
+        duration: 0.7,
+        ease: "power3.out",
+      },
+      "-=0.3");
 
   if (subRef.current) {
     tl.from(
@@ -40,7 +43,7 @@ const StatSlide = forwardRef(({ title, value, subtitle }, ref) => {
       {
         y: 20,
         opacity: 0,
-        duration: 1,
+        duration: 2,
         ease: "power2.out",
       },
       "-=0.25"
@@ -55,17 +58,23 @@ const StatSlide = forwardRef(({ title, value, subtitle }, ref) => {
 
 
   // EXIT animation exposed to parent
-  useImperativeHandle(ref, () => ({
-    exit: (onComplete) => {
-      gsap.to(sectionRef.current, {
-        opacity: 0,
-        scale: 0.96,
-        duration: 0.5,
-        ease: "power2.inOut",
-        onComplete,
-      });
-    },
-  }));
+ useImperativeHandle(ref, () => ({
+  exit: (onComplete) => {
+    let vars = { opacity: 0, duration: 0.5, ease: "power2.inOut" };
+
+    if (direction === "up") vars.y = -60;
+    if (direction === "left") vars.x = -80;
+    if (direction === "right") vars.x = 80;
+    if (direction === "scale") vars.scale = 0.9;
+    if (direction === "fade") vars.opacity = 0;
+
+    gsap.to(sectionRef.current, {
+      ...vars,
+      onComplete,
+    });
+  },
+}));
+
 
   return (
     <section className="slide" ref={sectionRef}>

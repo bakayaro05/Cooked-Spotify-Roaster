@@ -1,42 +1,134 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* ===== LOADING SCREEN ===== */
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: black;
+}
+
+.loading-screen video {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  z-index: 1;
+}
+
+/* subtle dark overlay for readability */
+.loading-screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+
+.loading-text {
+  position: relative;
+  z-index: 3;
+
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  color: white;
+  text-align: center;
+
+  animation: fadePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes fadePulse {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+
+/* ===== INPUT SCREEN ===== */
+
+.input-screen {
+  min-height: 100vh;
+  width: 100vw;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.4rem;
+
+  background: radial-gradient(
+    circle at top,
+    #1db95422,
+    #000 60%
+  );
+
+  color: white;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.input-screen h1 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.input-screen input {
+  width: min(90%, 420px);
+  padding: 0.9rem 1.1rem;
+
+  font-size: 1rem;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+
+  background: #111;
+  color: white;
+
+  box-shadow: 0 0 0 1px #333;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.input-screen input::placeholder {
+  color: #777;
 }
 
-.card {
-  padding: 2em;
+.input-screen button {
+  margin-top: 0.5rem;
+  padding: 0.75rem 1.8rem;
+
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+
+  background: #1db954;
+  color: black;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.read-the-docs {
-  color: #888;
+.input-screen button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(29, 185, 84, 0.35);
+}
+
+.input-screen button:active {
+  transform: translateY(0);
 }
