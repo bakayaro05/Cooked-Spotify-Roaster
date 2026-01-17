@@ -1,13 +1,15 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useLayoutEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { gsap } from "gsap";
 import SplitType from "split-type";
 
 
-const NarrativeSlide = forwardRef(({ sentence }, ref) => {
+const NarrativeSlide = forwardRef(({ sentence, introDone }, ref) => {
   const sectionRef = useRef(null);
   const textRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!introDone) return;
+
     const split = new SplitType(textRef.current, { types: "words" });
 
     gsap.from(split.words, {
@@ -19,7 +21,7 @@ const NarrativeSlide = forwardRef(({ sentence }, ref) => {
     });
 
     return () => split.revert();
-  }, []);
+  }, [introDone]);
 
   useImperativeHandle(ref, () => ({
     exit: (onComplete) => {

@@ -1,6 +1,6 @@
 import StatSlide from "./component/slide/StatSlide";
 import NarrativeSlide from "./component/slide/NarrativeSlide";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useLayoutEffect } from "react";
 import Background from "./component/background/background";
 import "./App.css"
 import gsap from 'gsap'
@@ -12,6 +12,8 @@ import bg3 from "./assets/bg3.mp4";
 import bg4 from "./assets/bg4.mp4";
 import bg5 from "./assets/bg5.mp4";
 
+
+
 const backgrounds = [bg1, bg2, bg3, bg4, bg5];
 
 function getPlaylistId(url) {
@@ -19,11 +21,56 @@ function getPlaylistId(url) {
   return match ? match[1] : null;
 }
 
+function LoadingScreen({loadingRef}){
+
+   return (
+      <div className="loading-screen" ref={loadingRef}>
+        <video autoPlay muted loop playsInline>
+          <source src={bg0} />
+        </video>
+        <div className="loading-text">
+          Wrapping your music taste into space…
+        </div>
+      </div>
+    );
+
+}
+
+function Slides({slidesContainerRef,
+  slideRef,
+  index,
+  slides,
+  introDone}){
+ const slide = slides[index];
+  if (!slide) return null;
+return(
+  <>
+   {introDone && (<Background src={backgrounds[index % backgrounds.length]} />)}
+   
+  <div ref={slidesContainerRef} className="slides-container">
+    {slide.type === "stat" ? (
+      <StatSlide ref={slideRef} introDone={introDone} key={index} {...slide} />
+    ) : (
+      <NarrativeSlide
+        ref={slideRef}
+        introDone={introDone}
+        key={index}
+        sentence={slide.sentence}
+
+      />
+    )}
+  </div>
+  </>
+);
+
+  }
+
 function App() {
   const slideRef = useRef(null);
+  const [showSlides, setShowSlides] = useState(false);
   const loadingRef = useRef(null);
   const slidesContainerRef = useRef(null);
-
+  const [introDone, setIntroDone] = useState(false);
   const [data, setData] = useState(null);
   const [index, setIndex] = useState(0);
   const [playlistUrl, setPlaylistUrl] = useState("");
@@ -82,6 +129,7 @@ function App() {
     //  HARD GUARD — prevents  crash
     if (
       phase !== "slides" ||
+      !introDone ||
       !slideRef.current ||
       slides.length === 0
     ) {
@@ -95,13 +143,24 @@ function App() {
     }, 7500);
 
     return () => clearTimeout(timer);
-  }, [index, slides.length, phase]);
+  }, [index, slides.length, phase, introDone]);
 
 /* ---------------- FOR SMOOTH TRANSITION BETWEEN LOADING AND SLIDES SCREEN ---------------- */
-  useEffect(() => {
+  useLayoutEffect(() => {
   if (phase !== "slides") return;
+  
 
-  const tl = gsap.timeline();
+  setIntroDone(false);
+
+
+
+  const tl = gsap.timeline({
+  onComplete: () => {
+    setIntroDone(true); // UNLOCK slide progression.. did this to fix a minute error that causes animation to break in the first slide and then continue again.
+    setShowSlides(true); //mount    
+  }
+});
+
 
   // hide slides initially
   gsap.set(slidesContainerRef.current, {
@@ -112,7 +171,7 @@ function App() {
   tl.to(loadingRef.current, {
     opacity: 0,
     scale: 1.05,
-    duration: 0.8,
+    duration: 5,
     ease: "power2.inOut"
   })
     .set(loadingRef.current, { display: "none" })
@@ -153,55 +212,79 @@ function App() {
 
   /* ---------------- PHASE SCREENS ---------------- */
 
-  if (phase === "input") {
-    return (
-      <div className="input-screen">
-        <h1>Your Spotify Wrapped</h1>
-        <input
-          placeholder="Paste playlist link"
-          value={playlistUrl}
-          onChange={e => setPlaylistUrl(e.target.value)}
-        />
-        <button onClick={startWrapped}>Continue</button>
-      </div>
-    );
-  }
 
-  if (phase === "loading") {
-    return (
-      <div className="loading-screen" ref={loadingRef}>
-        <video autoPlay muted loop playsInline>
-          <source src={bg0} />
-        </video>
-        <div className="loading-text">
-          Wrapping your music taste into space…
+if (phase === "input") {
+  return (
+    <div className="input-screen">
+
+      {/* Background video */}
+      <video
+        className="bg-video"
+        autoPlay
+        muted
+        loop
+        playsInline
+      >
+        <source src={bg1} type="video/mp4" />
+      </video>
+
+      {/* Overlay */}
+      <div className="overlay"></div>
+
+      <div className="input-wrapper">
+
+        <div className="input-card">
+          <h1>Your Spotify Wrapped</h1>
+          <p className="tagline">
+            Turn your playlist into a cinematic roast.
+          </p>
+
+          <input
+            placeholder="Paste Spotify playlist link"
+            value={playlistUrl}
+            onChange={e => setPlaylistUrl(e.target.value)}
+          />
+
+          <button onClick={startWrapped}>
+            ENTER THE WRAP
+          </button>
         </div>
+
+        <div className="footer-note">
+          Built by an indie dev · Not affiliated with Spotify
+        </div>
+
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  if (!data) return null;
 
+   
   /* ---------------- RENDER SLIDE ---------------- */
 
-  const slide = slides[index];
-return(
+  return (
   <>
-   <Background src={backgrounds[index % backgrounds.length]} />
-   
-  <div ref={slidesContainerRef} className="slides-container">
-    {slide.type === "stat" ? (
-      <StatSlide ref={slideRef} key={index} {...slide} />
-    ) : (
-      <NarrativeSlide
-        ref={slideRef}
-        key={index}
-        sentence={slide.sentence}
-      />
-    )}
-  </div>
+    
+      <LoadingScreen loadingRef={loadingRef} />
+    
+
+    
+      {showSlides && <Slides  slidesContainerRef={slidesContainerRef}
+      slideRef={slideRef}
+      index={index}
+      slides={slides}
+      introDone={introDone} />}
+    
   </>
 );
+
+
+ 
+     
+
+
+  
 }
 
 export default App;

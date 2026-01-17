@@ -100,7 +100,8 @@ app.post("/roast", async (req, res) => {
         const tracks = req.body.tracks;
 
         const prompt = `
-Roast this Spotify playlist of a user sarcastically. Keep it very very short
+Generate 3 to 5 short, sarcastic roast sentences based on this Spotify playlist data.
+Keep each sentence under 15 words.
 Songs:
 ${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
         `;
@@ -119,6 +120,9 @@ ${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
         res.status(500).json({ error: err.message });
     }
 });
+
+
+
 
 
 app.post("/vibe", async (req, res) => {
@@ -182,7 +186,8 @@ app.post("/wrapped", async (req, res) => {
       .filter(Boolean);
 
     const artistGenreMap = await getArtistsGenre(tracks, token);
-    const wrapped = buildWrappedStats(tracks, artistGenreMap);
+    const wrapped = await buildWrappedStats(tracks, artistGenreMap);
+    console.log("WRAPPED BUILDING DONE. NOW RETURNING..")
 
     res.json(wrapped);
   } catch (err) {
@@ -192,11 +197,45 @@ app.post("/wrapped", async (req, res) => {
 });
 
 
-function buildWrappedStats(tracks, artistGenres) {
+async function getRoast(tracks){
+
+  try {
+
+
+        const prompt = `
+Generate 3 to 5 short, sarcastic roast sentences based on this Spotify playlist data.
+Keep each sentence under 15 words.
+Songs:
+${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
+        `;
+
+        const completion = await groq.chat.completions.create({
+            model: "llama-3.1-8b-instant",
+            messages: [
+                { role: "system", content: "You are a funny sarcastic roaster. Where you roast a persons spotify playlist." },
+                { role: "user", content: prompt }
+            ]
+        });
+
+        const text = completion.choices[0].message.content;
+         return text
+    .split("\n")
+    .map(s => s.replace(/^[-•\d.]+\s*/, "").trim())
+    .filter(Boolean);
+
+    } catch (err) {
+       console.log("error:",err)
+    }
+
+}
+
+async function  buildWrappedStats(tracks, artistGenres){
 
   const basicData = getPlaylistStats(tracks);
   const topGenre = getTopGenre(tracks, artistGenres);
-  
+  console.log(`Waiting for roast.`)
+  const roast =  await getRoast(tracks);
+  console.log(`Roast making done.`)
 
   return {
     popularity: basicData.avgPopularity,
@@ -205,7 +244,8 @@ function buildWrappedStats(tracks, artistGenres) {
     topArtist: getTopArtist(tracks),
     topGenre: topGenre,
     vibe: getPlaylistVibe(tracks, topGenre),
-    hiddenGem: getHiddenGem(tracks)
+    hiddenGem: getHiddenGem(tracks),
+    roasts : roast
   };
 }
 

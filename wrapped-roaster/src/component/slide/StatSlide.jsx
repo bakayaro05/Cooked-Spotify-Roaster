@@ -1,60 +1,76 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useLayoutEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { gsap } from "gsap";
 import SplitType from "split-type";
 import "./slide.css";
 
-const StatSlide = forwardRef(({ title, value, subtitle,direction }, ref) => {
+const StatSlide = forwardRef(({ title, value, subtitle,direction, introDone }, ref) => {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const valueRef = useRef(null);
   const subRef = useRef(null);
+  const splitRef = useRef(null);
 
   const tl = useRef(null);
 
   console.log("StatSlide rendered", { title, value, subtitle });
   // ENTER animation (Spotify-style)
-  useEffect(() => {
+  useLayoutEffect(() => {
+  if (!introDone) return;
 
-  const valueSplit = new SplitType(valueRef.current, { types: "chars" });
-  const tl = gsap.timeline();  
-  const ctx = gsap.context(()=>{
+  const ctx = gsap.context(() => {
+    tl.current = gsap.timeline();
+        
+    //for fade in first.. 
+     tl.current.to(sectionRef.current, {
+      opacity: 1,
+      duration: 0.6,
+      ease: "power2.out",
+    });
 
- 
-  tl.from(titleRef.current, {
-    y: 40,
-    opacity: 0,
-    duration: 1.6,
-    ease: "power3.out",
-  })
-  .from(
-      valueSplit.chars,
-      {
-        y: 50,
+
+   splitRef.current = new SplitType(valueRef.current, { types: "chars" });
+    tl.current
+      .from(titleRef.current, {
+        y: 40,
         opacity: 0,
-        stagger: 0.25,
-        duration: 0.7,
+        duration: 1.2,
         ease: "power3.out",
-      },
-      "-=0.3");
+      })
+      .from(
+        splitRef.current.chars,
+        {
+          y: 50,
+          opacity: 0,
+          stagger: 0.08,
+          duration: 0.6,
+          ease: "power3.out",
+        },
+        "-=0.2"
+      );
 
-  if (subRef.current) {
-    tl.from(
-      subRef.current,
-      {
-        y: 20,
-        opacity: 0,
-        duration: 2,
-        ease: "power2.out",
-      },
-      "-=0.25"
-    );
-  }
+    if (subRef.current) {
+      tl.current.from(
+        subRef.current,
+        {
+          y: 20,
+          opacity: 0,
+          duration: 0.6,
+          ease: "power2.out",
+        },
+        "-=0.2"
+      );
+    }
+  }, sectionRef);
 
-  return () => tl.kill();
+  return () => {
+  splitRef.current?.revert();
+  splitRef.current = null;
+    ctx.revert();
+    tl.current?.kill();
+    tl.current = null;
+  };
+}, [introDone]);
 
-  },tl);
-  return ()=>ctx.revert();
-}, []);
 
 
   // EXIT animation exposed to parent

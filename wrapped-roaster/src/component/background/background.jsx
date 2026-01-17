@@ -36,6 +36,7 @@ function Background({ src }) {
         loop
         muted
         playsInline
+        preload="auto"
       />
       <div className="bg-overlay" />
     </div>
