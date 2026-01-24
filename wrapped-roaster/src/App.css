@@ -1,17 +1,60 @@
-/* ===== LOADING SCREEN ===== */
 
-.loading-screen {
+
+
+.app-root {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   background: black;
+}
+
+.layer {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+  will-change: opacity;
+}
+
+.layer.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.layer.hide {
+  opacity: 0;
+}
+
+
+/* ===== LOADING SCREEN ===== */
+
+
+
+
+
+.loading-text {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  font-size: 1.3rem;
+  letter-spacing: 0.35em;
+  opacity: 0.85;
+  z-index: 3;
+
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+
+.loading-overlay p {
+  text-shadow: 0 0 25px rgba(255,255,255,0.25);
+}
+
+
+@keyframes fadeIn {
+  to { opacity: 1; }
 }
 
 .loading-screen video {
@@ -36,20 +79,7 @@
   z-index: 2;
 }
 
-.loading-text {
-  position: relative;
-  z-index: 3;
 
-  font-size: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-
-  color: white;
-  text-align: center;
-
-  animation: fadePulse 2.5s ease-in-out infinite;
-}
 
 @keyframes fadePulse {
   0%   { opacity: 0.4; }
@@ -111,6 +141,12 @@
   align-items: center;
   color: white;
 }
+.input-wrapper.exit {
+  transform: translateX(-120px);
+  opacity: 0;
+  transition: all 0.8s ease;
+}
+
 
 
 .input-screen {
@@ -187,6 +223,11 @@
   pointer-events: none;
 }
 
+.input-card.exit {
+  transform: translateX(-120px);
+  opacity: 0;
+  transition: all 0.8s ease;
+}
 
 
 .input-card button:hover {
@@ -217,4 +258,42 @@
   bottom: 24px;
   font-size: 0.85rem;
   opacity: 0.6;
+}
+
+/* =======FOR INTRO LAYER =======*/
+.intro {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  z-index: 20;
+}
+
+.intro p {
+  position: absolute;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.intro p:nth-child(1) { animation-delay: 0s; }
+.intro p:nth-child(2) { animation-delay: 0.9s; }
+.intro p:nth-child(3) { animation-delay: 1.8s; }
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+.pulse {
+  animation: pulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
 }

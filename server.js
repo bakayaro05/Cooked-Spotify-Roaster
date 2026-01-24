@@ -197,23 +197,46 @@ app.post("/wrapped", async (req, res) => {
 });
 
 
-async function getRoast(tracks){
+async function getRoast(tracks,basicData,topGenre){
 
   try {
 
 
         const prompt = `
-Generate 3 to 5 short, sarcastic roast sentences based on this Spotify playlist data.
-Keep each sentence under 15 words.
-Songs:
-${tracks.map((t, i) => `${i+1}. ${t}`).join("\n")}
-        `;
+Write 3 to 5 sarcastic roast sentences about a person's music taste.
+
+Context:
+- Average popularity: ${basicData.avgPopularity}%
+- Total tracks: ${basicData.trackCount}
+- Top genre: ${topGenre}
+- Top artist: ${getTopArtist(tracks)}
+- Total listening time: ${basicData.totalMinutes} minutes
+
+STRICT RULES:
+- ONLY roast sentences
+- No intro text
+- One sentence per line
+- Max 14 words
+- Be brutally specific, not generic
+`;
+
 
         const completion = await groq.chat.completions.create({
             model: "llama-3.1-8b-instant",
-            messages: [
-                { role: "system", content: "You are a funny sarcastic roaster. Where you roast a persons spotify playlist." },
-                { role: "user", content: prompt }
+            messages: [ {
+  role: "system",
+  content: `
+You generate ONLY roast sentences.
+No introductions.
+No explanations.
+No headings.
+No emojis.
+No numbering.
+No quotes.
+Each line must be a roast sentence.
+Never say what you are doing.
+Generate 5 to 8 roasts.
+`} ,{ role: "user", content: prompt }
             ]
         });
 
@@ -234,8 +257,9 @@ async function  buildWrappedStats(tracks, artistGenres){
   const basicData = getPlaylistStats(tracks);
   const topGenre = getTopGenre(tracks, artistGenres);
   console.log(`Waiting for roast.`)
-  const roast =  await getRoast(tracks);
-  console.log(`Roast making done.`)
+  const roast =  await getRoast(tracks,basicData,topGenre);
+  console.log(`Roast making done.`) 
+  
 
   return {
     popularity: basicData.avgPopularity,
@@ -245,9 +269,11 @@ async function  buildWrappedStats(tracks, artistGenres){
     topGenre: topGenre,
     vibe: getPlaylistVibe(tracks, topGenre),
     hiddenGem: getHiddenGem(tracks),
-    roasts : roast
+    roasts : roast,
+  
   };
 }
+
 
 
 

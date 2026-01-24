@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useMemo, useLayoutEffect } from "react";
 import Background from "./component/background/background";
 import "./App.css"
 import gsap from 'gsap'
+import { audioEngine } from "../public/audio/AudioEngine.jsx";
+import { setAudioPhase } from "../public/audio/useAudio.js";
 
 import bg0 from "./assets/bg0.mp4";
 import bg1 from "./assets/bg1.mp4";
@@ -15,37 +17,31 @@ import bg5 from "./assets/bg5.mp4";
 
 
 const backgrounds = [bg1, bg2, bg3, bg4, bg5];
+const MIN_LOADING_TIME = 10000; //for mandatory 3.5s cinematic hold
 
 function getPlaylistId(url) {
   const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
   return match ? match[1] : null;
 }
 
-function LoadingScreen({loadingRef}){
 
-   return (
-      <div className="loading-screen" ref={loadingRef}>
-        <video autoPlay muted loop playsInline>
-          <source src={bg0} />
-        </video>
-        <div className="loading-text">
-          Wrapping your music taste into space…
-        </div>
-      </div>
-    );
-
-}
 
 function Slides({slidesContainerRef,
   slideRef,
   index,
   slides,
   introDone}){
+
+  if (!slides || slides.length === 0 || !slides[index]) {
+    return null;
+  }
+
  const slide = slides[index];
-  if (!slide) return null;
+  
 return(
   <>
-   {introDone && (<Background src={backgrounds[index % backgrounds.length]} />)}
+   {/* Background is ALWAYS present during slides */}
+   { (<Background src={backgrounds[index % backgrounds.length]} />)}
    
   <div ref={slidesContainerRef} className="slides-container">
     {slide.type === "stat" ? (
@@ -66,15 +62,32 @@ return(
   }
 
 function App() {
+
   const slideRef = useRef(null);
-  const [showSlides, setShowSlides] = useState(false);
-  const loadingRef = useRef(null);
+  const inputWrapperRef = useRef(null);
+  const inputCardRef = useRef(null);
+  const loadingTextRef = useRef(null);
+  const [showLoadingText, setShowLoadingText] = useState(false);
+  const introRef = useRef(null);
+  const line1Ref = useRef(null);
+  const line2Ref = useRef(null);
+  const line3Ref = useRef(null);
+  const introTl = useRef(null);
+
   const slidesContainerRef = useRef(null);
+  const [ShowSlides,setShowSlides]=useState(false);
   const [introDone, setIntroDone] = useState(false);
   const [data, setData] = useState(null);
   const [index, setIndex] = useState(0);
   const [playlistUrl, setPlaylistUrl] = useState("");
-  const [phase, setPhase] = useState("input");
+  const [phase, setPhase] = useState("intro");
+  const [dataReady, setDataReady] = useState(false);
+  const [minLoadingDone, setMinLoadingDone] = useState(false);
+
+
+
+
+
 
   /* ---------------- SLIDES (DERIVED SAFELY) ---------------- */
 
@@ -123,6 +136,44 @@ function App() {
     ];
   }, [data]);
 
+
+
+
+  /*-----------------FOR PLAYING AUDIO------------*/
+ useEffect(() => {
+  const unlock = () => {
+    audioEngine.unlock(); 
+    setAudioPhase(null);     // reset
+    setAudioPhase("HOME");   // replay
+  };
+
+
+  document.addEventListener("click", unlock, { once: true });
+  
+  return () =>{ document.removeEventListener("click", unlock);
+  } 
+},[]);
+
+
+
+  useEffect(() => {
+   if (phase === "input") {
+    setAudioPhase("HOME");
+    return;
+  }
+
+  if (phase === "loading") {
+    setAudioPhase("LOADING");
+    return;
+  }
+
+  if (phase === "slides") {
+    setAudioPhase("SLIDES");
+  }
+
+}, [phase]);
+
+
   /* ---------------- AUTO ADVANCE ---------------- */
 
   useEffect(() => {
@@ -145,6 +196,15 @@ function App() {
     return () => clearTimeout(timer);
   }, [index, slides.length, phase, introDone]);
 
+
+  /*For transitioning only when both are true i.e dat is ready as well as the minimum loading time has passed*/
+  useEffect(() => {
+  if (phase === "loading" && dataReady && minLoadingDone) {
+    setPhase("slides");
+  } 
+}, [phase, dataReady, minLoadingDone]);
+
+
 /* ---------------- FOR SMOOTH TRANSITION BETWEEN LOADING AND SLIDES SCREEN ---------------- */
   useLayoutEffect(() => {
   if (phase !== "slides") return;
@@ -156,7 +216,7 @@ function App() {
 
   const tl = gsap.timeline({
   onComplete: () => {
-    setIntroDone(true); // UNLOCK slide progression.. did this to fix a minute error that causes animation to break in the first slide and then continue again.
+    //setIntroDone(true); // UNLOCK slide progression.. did this to fix a minute error that causes animation to break in the first slide and then continue again.
     setShowSlides(true); //mount    
   }
 });
@@ -168,22 +228,133 @@ function App() {
     scale: 0.98
   });
 
-  tl.to(loadingRef.current, {
-    opacity: 0,
-    scale: 1.05,
-    duration: 5,
-    ease: "power2.inOut"
-  })
-    .set(loadingRef.current, { display: "none" })
-    .to(slidesContainerRef.current, {
+ 
+    tl.to(slidesContainerRef.current, {
       opacity: 1,
       scale: 1,
       duration: 1,
-      ease: "power2.out"
+      delay:0.6,
+      ease: "power2.out",
+      onComplete:setIntroDone(true)
     });
 
 }, [phase]);
 
+/*For loading text pulse effect*/
+useEffect(() => {
+  if (!showLoadingText || !loadingTextRef.current) return;
+
+  gsap.fromTo(
+    loadingTextRef.current,
+    { opacity: 0, y: 6 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 1,
+      ease: "power2.out",
+      onComplete: () => {
+        gsap.to(loadingTextRef.current, {
+          opacity: 0.4,
+          duration: 1.8,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+        });
+      }
+    }
+  );
+}, [showLoadingText]);
+
+
+/*----FOR TRANSITIOING INPUT LAYER TEXTS-----*/
+useLayoutEffect(() => {
+  if (phase !== "intro") return;
+
+  const lines = [
+    line1Ref.current,
+    line2Ref.current,
+    line3Ref.current,
+  ];
+
+  // hard reset
+  gsap.set(lines, {
+    opacity: 0,
+    y: 24,
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    xPercent: -50,
+    yPercent: -50,
+  });
+
+  const tl = gsap.timeline();
+  introTl.current = tl;
+
+  // LINE 1
+  tl.to(lines[0], {
+    opacity: 1,
+    y: 0,
+    duration: 0.9,
+    ease: "power3.out",
+  })
+  .to(lines[0], {
+    opacity: 0,
+    y: -16,
+    duration: 0.7,
+    ease: "power3.in",
+  }, "+=0.8");
+
+  // LINE 2
+  tl.to(lines[1], {
+    opacity: 1,
+    y: 0,
+    duration: 0.9,
+    ease: "power3.out",
+  })
+  .to(lines[1], {
+    opacity: 0,
+    y: -16,
+    duration: 0.7,
+    ease: "power3.in",
+  }, "+=0.8");
+
+  // LINE 3 (Tap to begin)
+  tl.to(lines[2], {
+    opacity: 1,
+    y: 0,
+    duration: 0.8,
+    ease: "power3.out",
+    onComplete: () => {
+      // flicker / pulse
+      gsap.to(lines[2], {
+        opacity: 0.4,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.2,
+        ease: "sine.inOut",
+      });
+    },
+  });
+
+}, [phase]);
+
+
+
+
+/*-----FOR TRANSITION BETWEEN INTRO TO INPUT----------*/
+useLayoutEffect(() => {
+  if (phase !== "intro-exit" || !introRef.current) return;
+
+  introTl.current?.kill(); // stop pulse cleanly
+
+  gsap.to(introRef.current, {
+    opacity: 0,
+    scale: 0.98,
+    duration: 0.8,
+    ease: "power2.inOut",
+    onComplete: () => setPhase("input"),
+  });
+}, [phase]);
 
 
   /* ---------------- START WRAPPED ---------------- */
@@ -192,6 +363,37 @@ function App() {
     if (!playlistUrl) return;
 
     setPhase("loading");
+    setMinLoadingDone(false);
+    setTimeout(() => {
+  setMinLoadingDone(true);
+}, MIN_LOADING_TIME);
+
+
+    // for Cinematic exit animation
+  const tl = gsap.timeline({
+    onComplete: () => {
+      // slight cinematic delay since it comes too fast before input card slides away.
+      setTimeout(() => {
+        setShowLoadingText(true);
+      }, 400);
+    }
+  });
+
+  tl.to(inputCardRef.current, {
+    x: -180,
+    opacity: 0,
+    rotateY: -8,
+    duration: 1.1,
+    ease: "power4.inOut",
+  })
+  .to(inputWrapperRef.current, {
+    x: -60,
+    opacity: 0,
+    duration: 0.9,
+    ease: "power3.inOut",
+  }, "-=0.6");
+
+   
 
     try {
       const id = getPlaylistId(playlistUrl);
@@ -203,41 +405,51 @@ function App() {
 
       const json = await res.json();
       setData(json);
-
-      setTimeout(() => setPhase("slides"), 1500);
+      setDataReady(true);
     } catch (err) {
       console.error(err);
     }
   };
 
-  /* ---------------- PHASE SCREENS ---------------- */
+/*------handlebegin for triggering the transisitioning between intro to input screen using useLayoutEffect---------*/
+const handleBegin = () => {
+  if (phase !== "intro") return;
+  setPhase("intro-exit");
+};
 
 
-if (phase === "input") {
-  return (
-    <div className="input-screen">
 
-      {/* Background video */}
-      <video
-        className="bg-video"
-        autoPlay
-        muted
-        loop
-        playsInline
-      >
-        <source src={bg1} type="video/mp4" />
-      </video>
 
-      {/* Overlay */}
-      <div className="overlay"></div>
+return (
 
-      <div className="input-wrapper">
 
-        <div className="input-card">
+  
+
+
+  <div className="app-root">
+
+     {/*Background ALWAYS mounted */}
+    <video className="bg-video" autoPlay muted loop playsInline>
+      <source src={bg1} type="video/mp4" />
+    </video>
+    <div className="overlay" />
+
+  {(phase === "intro" || phase === "intro-exit") && (
+  <div ref={introRef} className="intro" onClick={handleBegin}>
+    <p ref={line1Ref}>This is not a playlist.</p>
+    <p ref={line2Ref}>This is a personality profile.</p>
+    <p ref={line3Ref}>Tap to begin.</p>
+  </div>
+)}
+
+
+    {/* INPUT LAYER */}
+    
+    <div className={`layer input-layer ${phase === "input" ? "show" : "hide"}`}>
+      <div ref={inputWrapperRef} className="input-wrapper">
+        <div ref={inputCardRef} className="input-card">
           <h1>Your Spotify Wrapped</h1>
-          <p className="tagline">
-            Turn your playlist into a cinematic roast.
-          </p>
+          <p className="tagline">Turn your playlist into a cinematic roast.</p>
 
           <input
             placeholder="Paste Spotify playlist link"
@@ -245,42 +457,40 @@ if (phase === "input") {
             onChange={e => setPlaylistUrl(e.target.value)}
           />
 
-          <button onClick={startWrapped}>
-            ENTER THE WRAP
-          </button>
+          <button onClick={startWrapped}>ENTER THE WRAP</button>
         </div>
 
         <div className="footer-note">
           Built by an indie dev · Not affiliated with Spotify
         </div>
-
       </div>
     </div>
-  );
-}
 
+    {/* LOADING LAYER */}
+    <div className={`layer loading-layer ${phase === "loading" ? "show" : "hide"}`}>
+      {showLoadingText && (
+        <p ref={loadingTextRef} className="loading-text">
+          WRAPPING YOUR TASTE
+        </p>
+      )}
+    </div>
 
-   
-  /* ---------------- RENDER SLIDE ---------------- */
+    {/*SLIDES LAYER (PRE-MOUNTED) */}
+    <div className={`layer slides-layer ${phase === "slides" ? "show" : "hide"}`}>
+      <Slides
+        slidesContainerRef={slidesContainerRef}
+        slideRef={slideRef}
+        index={index}
+        slides={slides}
+        introDone={introDone}
+      />
+    </div>
 
-  return (
-  <>
-    
-      <LoadingScreen loadingRef={loadingRef} />
-    
-
-    
-      {showSlides && <Slides  slidesContainerRef={slidesContainerRef}
-      slideRef={slideRef}
-      index={index}
-      slides={slides}
-      introDone={introDone} />}
-    
-  </>
+  </div>
 );
 
 
- 
+  
      
 
 
