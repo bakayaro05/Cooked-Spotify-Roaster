@@ -13,16 +13,18 @@ import bg2 from "./assets/bg2.mp4";
 import bg3 from "./assets/bg3.mp4";
 import bg4 from "./assets/bg4.mp4";
 import bg5 from "./assets/bg5.mp4";
+import bg6 from "./assets/bg6.mp4";
 
 
 
-const backgrounds = [bg1, bg2, bg3, bg4, bg5];
+const backgrounds = [ bg2, bg3, bg4, bg5, bg6];
 const MIN_LOADING_TIME = 10000; //for mandatory 3.5s cinematic hold
 
 function getPlaylistId(url) {
   const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
   return match ? match[1] : null;
 }
+
 
 
 
@@ -40,9 +42,6 @@ function Slides({slidesContainerRef,
   
 return(
   <>
-   {/* Background is ALWAYS present during slides */}
-   { (<Background src={backgrounds[index % backgrounds.length]} />)}
-   
   <div ref={slidesContainerRef} className="slides-container">
     {slide.type === "stat" ? (
       <StatSlide ref={slideRef} introDone={introDone} key={index} {...slide} />
@@ -60,6 +59,67 @@ return(
 );
 
   }
+
+/*------------FOR END CREDIT------------*/
+function EndCredits({ onRestart }) {
+  const containerRef = useRef(null);
+  const titleRef = useRef(null);
+  const subtitleRef = useRef(null);
+  const buttonRef = useRef(null);
+  const footerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const tl = gsap.timeline();
+
+    gsap.set(
+      [titleRef.current, subtitleRef.current, buttonRef.current, footerRef.current],
+      { opacity: 0, y: 12 }
+    );
+
+    tl.to(titleRef.current, {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: "power3.out",
+    })
+      .to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: "power3.out",
+      }, "-=0.4")
+      .to(buttonRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: "power2.out",
+      }, "+=0.2")
+      .to(footerRef.current, {
+        opacity: 0.6,
+        y: 0,
+        duration: 0.6,
+        ease: "sine.out",
+      }, "-=0.3");
+
+  }, []);
+
+  return (
+    <div ref={containerRef} className="end-credits">
+      <p ref={titleRef}>That’s your taste.</p>
+      <p ref={subtitleRef}>No skips. No lies.</p>
+
+      <button ref={buttonRef} onClick={onRestart}>
+        Try another playlist
+      </button>
+
+      <p ref={footerRef} className="footer">
+        Built by an indie dev · Not Spotify
+      </p>
+    </div>
+  );
+}
+
+
 
 function App() {
 
@@ -83,8 +143,17 @@ function App() {
   const [phase, setPhase] = useState("intro");
   const [dataReady, setDataReady] = useState(false);
   const [minLoadingDone, setMinLoadingDone] = useState(false);
+  const [bgPhase, setBgPhase] = useState("intro");
 
 
+
+  /*----------- FOR DERIVING BACKGROUND ---------- */
+ const currentBackground = useMemo(() => {
+  if (bgPhase === "intro" || bgPhase === "input") return bg0;
+  if (bgPhase === "loading") return bg1;
+  if (bgPhase === "slides")
+    return backgrounds[index % backgrounds.length];
+}, [bgPhase, index]);
 
 
 
@@ -94,10 +163,12 @@ function App() {
   const slides = useMemo(() => {
     if (!data) return [];
 
-    const roastSlides = (data.roasts || []).map(sentence => ({
+    const roastSlides = (data.roastspersonality || []).map(sentence => ({
       type: "narrative",
       sentence,
     }));
+
+    
 
     return [
       {
@@ -171,6 +242,11 @@ function App() {
     setAudioPhase("SLIDES");
   }
 
+  
+  if (phase === "end") {
+    setAudioPhase("END");
+  }
+
 }, [phase]);
 
 
@@ -189,7 +265,14 @@ function App() {
 
     const timer = setTimeout(() => {
       slideRef.current.exit(() => {
-        setIndex(i => (i < slides.length - 1 ? i + 1 : i));
+        setIndex(i =>{
+      
+        if (i < slides.length - 1) return i + 1;
+        setPhase("end");
+        setBgPhase("end");
+        return i;
+          
+      });
       });
     }, 7500);
 
@@ -200,6 +283,7 @@ function App() {
   /*For transitioning only when both are true i.e dat is ready as well as the minimum loading time has passed*/
   useEffect(() => {
   if (phase === "loading" && dataReady && minLoadingDone) {
+     setBgPhase("slides"); 
     setPhase("slides");
   } 
 }, [phase, dataReady, minLoadingDone]);
@@ -352,7 +436,10 @@ useLayoutEffect(() => {
     scale: 0.98,
     duration: 0.8,
     ease: "power2.inOut",
-    onComplete: () => setPhase("input"),
+    onComplete: () => {
+       setBgPhase("input");
+       setPhase("input");
+    }, 
   });
 }, [phase]);
 
@@ -361,7 +448,8 @@ useLayoutEffect(() => {
 
   const startWrapped = async () => {
     if (!playlistUrl) return;
-
+    
+    setBgPhase("loading");
     setPhase("loading");
     setMinLoadingDone(false);
     setTimeout(() => {
@@ -429,10 +517,12 @@ return (
   <div className="app-root">
 
      {/*Background ALWAYS mounted */}
-    <video className="bg-video" autoPlay muted loop playsInline>
-      <source src={bg1} type="video/mp4" />
-    </video>
+    <Background src={currentBackground} />
     <div className="overlay" />
+
+
+  
+  
 
   {(phase === "intro" || phase === "intro-exit") && (
   <div ref={introRef} className="intro" onClick={handleBegin}>
@@ -449,7 +539,7 @@ return (
       <div ref={inputWrapperRef} className="input-wrapper">
         <div ref={inputCardRef} className="input-card">
           <h1>Your Spotify Wrapped</h1>
-          <p className="tagline">Turn your playlist into a cinematic roast.</p>
+          <p className="tagline">Turn your public playlist into a cinematic personality roast.</p>
 
           <input
             placeholder="Paste Spotify playlist link"
@@ -485,6 +575,13 @@ return (
         introDone={introDone}
       />
     </div>
+
+    {phase === "end" && (
+  <div className="layer end-layer show">
+    <EndCredits onRestart={() => window.location.reload()} />
+  </div>
+)}
+
 
   </div>
 );

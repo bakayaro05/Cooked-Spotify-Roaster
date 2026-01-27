@@ -197,67 +197,84 @@ app.post("/wrapped", async (req, res) => {
 });
 
 
-async function getRoast(tracks,basicData,topGenre){
-
+async function getRoast(tracks, basicData, topGenre) {
   try {
+    const prompt = `
+Generate EXACTLY 7 lines of output.
+
+FORMAT (STRICT):
+- Lines 1 to 5: ROASTS
+- Lines 6 to 7: PERSONALITY TRAITS
+
+RULES (MANDATORY):
+- One sentence per line
+- Maximum 14 words per sentence
+- No headings, labels, sections, or explanations
+- No emojis
+- No quotes
+- Use simple english
+- use second person narrative.
+
+ROAST STYLE:
+- Sharp, mocking, uncomfortably specific
 
 
-        const prompt = `
-Write 3 to 5 sarcastic roast sentences about a person's music taste.
+PERSONALITY STYLE:
+- Cold psychological reads
+- Observational, slightly cruel
 
-Context:
+
+DATA YOU MUST USE:
 - Average popularity: ${basicData.avgPopularity}%
 - Total tracks: ${basicData.trackCount}
+- Total listening time: ${basicData.totalMinutes} minutes
 - Top genre: ${topGenre}
 - Top artist: ${getTopArtist(tracks)}
-- Total listening time: ${basicData.totalMinutes} minutes
 
-STRICT RULES:
-- ONLY roast sentences
-- No intro text
-- One sentence per line
-- Max 14 words
-- Be brutally specific, not generic
+FAILURE CONDITIONS (DO NOT DO THESE):
+- No "SECTION"
+- No "PERSONALITY"
+- No summaries
+- No closing remarks
+- No extra lines
 `;
 
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: `
+You are a ruthless music critic and unwilling personality profiler.
+You output ONLY the requested sentences.
+No commentary. No formatting. No labels.
+If the format is broken, the response is wrong.
+`
+        },
+        { role: "user", content: prompt }
+      ]
+    });
 
-        const completion = await groq.chat.completions.create({
-            model: "llama-3.1-8b-instant",
-            messages: [ {
-  role: "system",
-  content: `
-You generate ONLY roast sentences.
-No introductions.
-No explanations.
-No headings.
-No emojis.
-No numbering.
-No quotes.
-Each line must be a roast sentence.
-Never say what you are doing.
-Generate 5 to 8 roasts.
-`} ,{ role: "user", content: prompt }
-            ]
-        });
+    const text = completion.choices[0].message.content;
 
-        const text = completion.choices[0].message.content;
-         return text
-    .split("\n")
-    .map(s => s.replace(/^[-•\d.]+\s*/, "").trim())
-    .filter(Boolean);
+    return text
+  .split("\n")
+  .map(s => s.trim())
+  .filter(Boolean);
 
-    } catch (err) {
-       console.log("error:",err)
-    }
 
+  } catch (err) {
+    console.log("error:", err);
+  }
 }
+
 
 async function  buildWrappedStats(tracks, artistGenres){
 
   const basicData = getPlaylistStats(tracks);
   const topGenre = getTopGenre(tracks, artistGenres);
   console.log(`Waiting for roast.`)
-  const roast =  await getRoast(tracks,basicData,topGenre);
+  const roastspersonality =  await getRoast(tracks,basicData,topGenre);
   console.log(`Roast making done.`) 
   
 
@@ -269,7 +286,7 @@ async function  buildWrappedStats(tracks, artistGenres){
     topGenre: topGenre,
     vibe: getPlaylistVibe(tracks, topGenre),
     hiddenGem: getHiddenGem(tracks),
-    roasts : roast,
+    roastspersonality : roastspersonality,
   
   };
 }

@@ -35,7 +35,7 @@ export function getTopArtist(tracks) {
 
 export function getTopGenre(tracks, artistGenres) {
   const genreScore = {};
-  console.log("tracks:", tracks);
+ 
 
   tracks.forEach(track => {
     track.artists.forEach(artist => {

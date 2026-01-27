@@ -38,8 +38,14 @@ export function setAudioPhase(phase) {
   { volume: 0.45 }
 );
 
-    // audioEngine.play(randomFrom(), {
-    //   volume: 0.45
-    // });
+  
   }
+
+  if (phase === "END") {
+  console.log("setAudioPhaseEND");
+
+    audioEngine.fadeTo(0, 3.2);
+
+  return;
+}
 }
