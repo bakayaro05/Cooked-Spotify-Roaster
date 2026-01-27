@@ -1,3 +1,4 @@
+<pre>
 Spotify Playlist Roaster (Cooked)
 
 A fun web app that takes a public Spotify playlist link, analyzes it, roasts your music taste, and assigns a Vibe Score — because your playlist deserves honest feedback.
@@ -110,3 +111,4 @@ Roasts are intentionally sarcastic
 main / v1 → Core MVP
 v2 → Wrapped-style slides & animations
 v3 → Cinematic narrative experience (final)
+</pre>
