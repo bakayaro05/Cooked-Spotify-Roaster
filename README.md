@@ -271,7 +271,7 @@ Slides are derived, not fetched individually
 </pre>
 
  5. React Phase-Based Architecture
-
+<pre>
 ┌─────────┐
 │  Intro  │
 └────┬────┘
@@ -291,7 +291,7 @@ Slides are derived, not fetched individually
 ┌─────────┐
 │   End   │
 └─────────┘
-
+</pre>
 6. Slide Rendering Architecture
 <pre>
    Wrapped JSON
