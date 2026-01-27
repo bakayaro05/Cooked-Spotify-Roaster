@@ -83,7 +83,7 @@ V3 is the **final and most complete iteration** of Cooked, including a full migr
 - Looping background videos (SPA-safe)
 - Background music via a custom audio engine
 
-
+---
 
 #### Focus
 - Stability over hacks
