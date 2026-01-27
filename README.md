@@ -130,3 +130,4 @@ V3 is the **final and most complete iteration** of Cooked, including a full migr
 
 
 #### Complete User Flow
+Intro → Input → Loading → Slides → Ending
