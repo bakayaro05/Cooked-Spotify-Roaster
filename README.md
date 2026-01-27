@@ -153,7 +153,205 @@ Explicit user interaction via intro screen
 Non-Spotify background music
 Centralized control of play / pause / lifecycle
 
-🤖 AI Usage (Honest Take)
+
+OVERALL ARCHITECTURE/FLOW/OVERVIEW :
+
+**NOTE 
+V1 & V2 endpoints exist but unused
+V3 exclusively uses /wrapped
+Non-config files outside /wrapped-roaster belong to legacy versions
+Current HLD reflects V3 only**
+
+1. System Overview Diagram :
+<pre>
+┌────────────────────────────┐
+│        Web Browser         │
+│  (React SPA + GSAP + Audio)│
+└─────────────┬──────────────┘
+              │ HTTP (JSON)
+              ▼
+┌────────────────────────────┐
+│      Node.js Server        │
+│        (Express)           │
+└─────────────┬──────────────┘
+        ┌─────┴─────┐
+        ▼           ▼
+┌─────────────┐  ┌─────────────┐
+│ Spotify API │  │  Groq LLM   │
+│ (Playlist)  │  │ (Roasting) │
+└─────────────┘  └─────────────┘
+</pre>
+
+2. Backend HLD Diagram (server.js + analytics.js)
+<pre>
+┌───────────────────────────────┐
+│          server.js            │
+│      (Express Server)         │
+├───────────────────────────────┤
+│  /wrapped  (V3 ONLY ENDPOINT) │
+│                               │
+│  1. Get Spotify Token         │
+│  2. Fetch Playlist            │
+│  3. Extract Tracks            │
+│  4. Fetch Artist Genres       │
+│  5. Call analytics.js         │
+│  6. Call Groq LLM             │
+│  7. Build Wrapped JSON        │
+└───────────────┬───────────────┘
+                │
+                ▼
+┌───────────────────────────────┐
+│         analytics.js          │
+│     (Pure Analysis Layer)     │
+├───────────────────────────────┤
+│ getPlaylistStats()            │
+│ getTopArtist()                │
+│ getTopGenre()                 │
+│ getHiddenGem()                │
+│ getPlaylistVibe()             │
+└───────────────────────────────┘
+</pre>
+3. Wrapped Endpoint Internal Flow
+<pre>
+   Client Request
+    │
+    ▼
+/wrapped (POST)
+    │
+    ├──► getSpotifyToken()
+    │
+    ├──► Fetch Playlist Metadata (via spotify API)
+    │
+    ├──► Extract Track Objects
+    │
+    ├──► Fetch Artist Genres ( via getArtistsGenre() )
+    │
+    ├──► analytics.js   (via buildWrappedStats() )
+    │      ├─ Popularity         {via  getPlaylistStats() }
+    │      ├─ Duration           {via  getPlaylistStats() }
+    │      ├─ Top Artist         {via getTopArtist() }
+    │      ├─ Top Genre          {via getRoast() }
+    │      └─ Hidden Gem         {via getHiddenGem() }  
+    │      └─ Groq LLM (Roast + Personality) {ALL THROUGH getPlaylistStats() }
+    │      
+    ├
+    │
+    ▼
+Final Wrapped JSON
+</pre>
+
+4. Frontend HLD Diagram
+<pre>
+┌─────────────────────────────────────┐
+│            React App (SPA)           │
+│           src/app.jsx                │
+├─────────────────────────────────────┤
+│ Phase Controller (State Machine)    │
+│ intro → input → loading → slides → end
+├─────────────────────────────────────┤
+│ Background Video Engine             │
+│ (bg0.mp4 → bg6.mp4)                 │
+├─────────────────────────────────────┤
+│ Slide Engine                        │
+│ ├── StatSlide Component             │
+│ └── NarrativeSlide Component        │
+├─────────────────────────────────────┤
+│ GSAP Animation Layer                │
+├─────────────────────────────────────┤
+│ Audio System                        │
+│ ├── useAudio.js                     │
+│ └── AudioEngine Class               │
+└─────────────────────────────────────┘
+</pre>
+<pre>
+Entire frontend logic lives in /wrapped-roaster
+No routing, no Redux
+UI controlled by phases
+Slides are derived, not fetched individually
+</pre>
+
+ 5. React Phase-Based Architecture
+
+┌─────────┐
+│  Intro  │
+└────┬────┘
+     ▼
+┌─────────┐
+│  Input  │
+└────┬────┘
+     ▼
+┌─────────┐
+│ Loading │  (Minimum cinematic delay)
+└────┬────┘
+     ▼
+┌─────────┐
+│ Slides  │  (Auto-advance)
+└────┬────┘
+     ▼
+┌─────────┐
+│   End   │
+└─────────┘
+
+6. Slide Rendering Architecture
+<pre>
+   Wrapped JSON
+    │
+    ▼
+slides[] (Derived)
+    │
+    ├── StatSlide
+    │     ├─ Popularity
+    │     ├─ Top Artist
+    │     └─ Top Genre
+    │
+    └── NarrativeSlide
+          ├─ Roast Line 1
+          ├─ Roast Line 2
+          └─ Personality Lines
+</pre>
+
+7. Audio System HLD
+<pre>
+ React Phase Change
+       │
+       ▼
+setAudioPhase()
+       │
+       ▼
+useAudio.js
+       │
+       ▼
+AudioEngine (Singleton)
+       │
+       ▼
+HTMLAudioElement
+
+</pre>
+
+8. Asset Architecture
+<pre>
+ /wrapped-roaster
+│
+├── public/audio/
+│     └── bgm mp3 files
+│
+├── src/assets/
+│     ├── bg0.mp4 → bg6.mp4
+│
+├── src/components/
+│     ├── Slide Component
+│     └── Narrative Component
+
+
+Audio kept in public/ to bypass SPA routing
+Videos bundled for fast local playback
+Components separated by responsibility
+
+</pre>
+
+
+
+AI Usage (Honest Take)
 
 AI was used heavily in this project:
 For code generation
