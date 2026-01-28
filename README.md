@@ -194,6 +194,100 @@ V3 is the **final and most complete iteration** of Cooked, including a full migr
 
 ---
 
+
+## Project File Structure
+This project consists of a Node.js backend (V3) and a React-based frontend (wrapped-roaster).
+Earlier versions (V1, V2) exist in the repository but are not used in the current implementation.
+
+## **Root Directory**
+<pre>
+  /
+├── analytics.js
+├── server.js
+├── app.js
+├── app.ts
+├── wrapped.js
+├── styles.css
+├── cooked.rest
+├── wrapped-roaster/
+└── (config files)
+
+</pre>
+
+## **File Descriptions**
+
+- analytics.js
+Analyzes the Spotify tracks and artist data received from the Spotify API.
+It processes the data returned by the /wrapped endpoint and structures it for consumption by the frontend Slide and Narrative components.
+
+- server.js
+Main backend server file.
+While multiple endpoints exist from earlier versions (V1, V2), only the /wrapped endpoint is used in V3.
+This endpoint fetches Spotify data, invokes analytics.js, and returns the final processed payload.
+
+- app.js / app.ts / wrapped.js / styles.css
+Legacy files from earlier versions (V1 and V2).
+These files are not used in the current V3 implementation.
+
+- cooked.rest
+REST client file used for manually testing backend endpoints during development.
+
+- wrapped-roaster/
+Contains all frontend logic for V3, implemented using React.
+
+## **wrapped-roaster (Frontend – V3)**
+<pre>
+  wrapped-roaster/
+├── public/
+│   └── audio/
+├── src/
+│   ├── assets/
+│   └── component/
+│       ├── Slide/
+│       └── Narrative/
+│   └── App.jsx
+├── index.html
+├── package.json
+├── vite.config.js
+└── README.md
+
+</pre>
+
+- public/audio
+
+Stores all background music files (.mp3, .m4a) used across different phases of the application (home, loading, slides).
+Placed inside public to bypass SPA routing and ensure direct, reliable audio access.
+
+- src/assets
+
+Contains background video files (bg0.mp4 to bg6.mp4).
+These videos are used as dynamic visual backgrounds during slides and narrative sequences.
+
+- src/component
+
+Contains the two core UI components of the application:
+
+- Slide Component
+Handles slide-based presentation of Spotify analytics such as top artists, genres, and statistics.
+Includes GSAP-based animation logic for cinematic transitions.
+
+- Narrative Component
+Handles text-only, paragraph-style storytelling.
+Uses the same /wrapped endpoint data but focuses on narrative delivery instead of visual slides.
+
+- src/App.jsx
+
+Main React entry point for the frontend.
+Calls the backend /wrapped endpoint.
+Controls the entire user flow including:
+
+Intro sequence
+Slide rendering
+Narrative rendering
+End sequence
+Acts as the central coordinator for all frontend components and application state.
+
+---
 ## 📎 Branch Guide
 
 - `main` / `v1` → Core MVP  
