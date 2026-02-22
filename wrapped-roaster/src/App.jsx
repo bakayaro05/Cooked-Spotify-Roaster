@@ -485,7 +485,8 @@ useLayoutEffect(() => {
 
     try {
       const id = getPlaylistId(playlistUrl);
-      const res = await fetch("http://localhost:3000/wrapped", {
+      const API_BASE = import.meta.env.VITE_API_URL;
+      const res = await fetch(`${API_BASE}/wrapped`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playlistId: id }),
