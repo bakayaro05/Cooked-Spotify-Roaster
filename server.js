@@ -8,22 +8,28 @@ import { getHiddenGem, getPlaylistStats, getPlaylistVibe, getTopArtist, getTopGe
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
+const PORT = process.env.PORT || 3000;
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://yourusername.github.io"
+  ],
+  methods: ["GET", "POST"],
+  credentials: true
+}));
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+
  
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY});
 
 
 
-app.get("/",(req,res)=>{
-
-   res.sendFile(path.join(__dirname,'index.html'))
-
-})
-
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
 // ---------------------------
 // 1. Get a public Spotify token
 // ---------------------------
@@ -31,8 +37,8 @@ app.get("/",(req,res)=>{
 // Get Spotify token using Client Credentials
 // ---------------------------
 async function getSpotifyToken() {
-    const clientId = process.env.clientId;
-    const clientSecret = process.env.clientSecret;
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
 
     const authString = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
 
@@ -328,4 +334,4 @@ async function  buildWrappedStats(tracks, artistGenres){
 
 
 // Run server
-app.listen(3000, () => console.log("Server running on port 3000"));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
