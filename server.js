@@ -14,7 +14,7 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://yourusername.github.io"
+    "https://bakayaro05.github.io/Cooked-Spotify-Roaster/"
   ],
   methods: ["GET", "POST"],
   credentials: true
