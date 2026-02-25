@@ -187,7 +187,7 @@ V3 is the **final and most complete iteration** of Cooked, including a full migr
 
 ## ⚠️ Notes
 
-- Playlist must be public
+-  It works only with public Spotify playlists — private or personal playlists won’t be accessible due to API limitations.
 - Built for learning and experimentation
 - Not affiliated with Spotify
 - Roasts are intentionally sarcastic 😄
