@@ -14,6 +14,6 @@ export const AUDIO_LIBRARY = {
     [`${base}audio/jazz-home-4.mp3`]: `${base}audio/jazz-home-4-reverb.mp3`
   },
   SLIDES: [
-    `${base}audio/jazz-slide-1.m4a`
+    `${base}audio/jazz-slide-1.mp3`
   ]
 };
