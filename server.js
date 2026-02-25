@@ -209,8 +209,8 @@ async function getRoast(tracks, basicData, topGenre) {
 Generate EXACTLY 7 lines of output.
 
 FORMAT (STRICT):
-- Lines 1 to 5: ROASTS
-- Lines 6 to 7: PERSONALITY TRAITS
+- Lines 1 to 4: ROASTS
+- Lines 5 to 7: PERSONALITY TRAITS
 
 RULES (MANDATORY):
 - One sentence per line
@@ -251,7 +251,7 @@ FAILURE CONDITIONS (DO NOT DO THESE):
         {
           role: "system",
           content: `
-You are a ruthless music critic and unwilling personality profiler.
+You are a ruthless music critic where you critique one's spotify playlist and unwilling personality profiler.
 You output ONLY the requested sentences.
 No commentary. No formatting. No labels.
 If the format is broken, the response is wrong.
